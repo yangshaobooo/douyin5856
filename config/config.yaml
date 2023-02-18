@@ -1,0 +1,31 @@
+app:
+  name: "douYin_app"
+  mode: "dev"
+  port: 8080
+  version: "v0.1.1"
+  start_time: "2020-07-01"
+  machine_id: 1
+log:
+  level: "debug"
+  filename: "douYin_app.log"
+  max_size: 2000
+  max_age: 30
+  max_backups: 7
+
+mysql:
+  host: "*"
+  port: 3306
+  user: "root"
+  password: "*"
+  dbname: "douyin"
+  max_open_connections: 200
+  max_idle_connections: 10
+redis:
+  host: "*"
+  port: 6379
+  password: "*"
+  db: 0
+  pool_size: 100
+  expire_time_long: 86400000000000
+video:
+  count: 4
