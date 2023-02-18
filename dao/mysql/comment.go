@@ -35,7 +35,7 @@ func CommentDelete(commentId int64) error {
 // VideoCommentAdd 视频的评论数量需要加num
 func VideoCommentAdd(videoId int64, num int) error {
 	sqlStr := `update videos set comment_count=comment_count+? where id = ?`
-	_, err := db.Exec(sqlStr, videoId, num)
+	_, err := db.Exec(sqlStr, num, videoId)
 	if err != nil {
 		zap.L().Error("mysql/comment/VideoCommentAdd failed", zap.Error(err))
 		return err

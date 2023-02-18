@@ -4,6 +4,7 @@ import (
 	"douyin5856/dao/mysql"
 	"douyin5856/dao/redis"
 	"douyin5856/logger"
+	"douyin5856/middlewares/rabbitmq"
 	"douyin5856/middlewares/snowflake1"
 	"fmt"
 	"github.com/spf13/viper"
@@ -38,11 +39,16 @@ func InitAllConfig() {
 		fmt.Printf("init snowflake1 failed, err:%v\n", err)
 		return
 	}
-	zap.L().Info("InitAllConfig(settings/logger/mysql/redis/snowflake1) success")
+	// 6、初始化消息队列
+	rabbitmq.InitRabbitMQ()
+	rabbitmq.InitLikeRabbitMQ()
+
+	zap.L().Info("InitAllConfig(settings/logger/mysql/redis/snowflake1/rabbitMq) success")
 }
 
 func CloseRes() {
 	defer zap.L().Sync()
 	defer mysql.Close()
 	defer redis.Close()
+	defer rabbitmq.Rmq.Destroy()
 }

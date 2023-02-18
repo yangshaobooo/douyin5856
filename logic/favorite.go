@@ -3,60 +3,36 @@ package logic
 import (
 	"douyin5856/dao/mysql"
 	"douyin5856/dao/redis"
+	"douyin5856/middlewares/rabbitmq"
 	"douyin5856/models"
-	"go.uber.org/zap"
 	"log"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 )
 
 // FavoriteAction 处理点赞相关逻辑
 func FavoriteAction(videoId, userId int64, actionType int32) (err error) {
-	// 1、查找数据库有没有点赞或者不点赞的记录
-	haven, isFavorite, err := mysql.QueryFavorite(videoId, userId)
-	if err != nil {
-		return err
-	}
-	// 2、如果点赞过，直接bool取反，修改数据库即可
-	if haven {
-		isFavorite = !isFavorite
-		if err = mysql.AlterFavorite(userId, videoId, isFavorite); err != nil {
-			return err
-		}
-		if actionType == 1 {
-			zap.L().Info("点赞点赞")
-			if err = mysql.AddFavoriteCount(videoId, 1); err != nil {
-				return err
-			}
-		} else {
-			zap.L().Info("取消点赞")
-			if err = mysql.AddFavoriteCount(videoId, -1); err != nil {
-				return err
-			}
-		}
-	} else {
-		// 3、如果没有查到，则插入新数据
-		if actionType == 1 {
-			zap.L().Info("点赞点赞")
-			isFavorite = true
-			if err = mysql.AddFavoriteCount(videoId, 1); err != nil {
-				return err
-			}
-		}
-		if err = mysql.InsertFavorite(userId, videoId, isFavorite); err != nil {
-			return err
-		}
-	}
 
-	// 上面是对数据库的操作，下面我们需要更新redis中的数据
+	// 拼接rabbitMq需要的string参数
+	sb := strings.Builder{}
+	sb.WriteString(strconv.FormatInt(userId, 10))
+	sb.WriteString(" ")
+	sb.WriteString(strconv.FormatInt(videoId, 10))
+
+	// 1、首先我们更新redis中的数据
 	if actionType == 1 {
-		//增加用户的喜欢集合
+		// 增加用户的redis喜欢集合
 		redis.AddUserFavoriteSet(userId, videoId)
+		// 通过消息队列操作数据库，添加mysql中用户喜欢的视频
+		rabbitmq.RmqLikeAdd.Publish(sb.String())
 	} else {
-		//把视频从用户喜欢集合里面删除
+		// 把视频从用户redis喜欢集合里面删除
 		redis.DelUserFavoriteSet(userId, videoId)
+		// 通过消息队列操作数据库，添加mysql中用户不喜欢的视频
+		rabbitmq.RmqLikeDel.Publish(sb.String())
 	}
-
 	return nil
 }
 

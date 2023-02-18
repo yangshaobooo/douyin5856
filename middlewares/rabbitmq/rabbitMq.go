@@ -33,7 +33,7 @@ func (r *RabbitMQ) failOnErr(err error, message string) {
 	}
 }
 
-// 关闭mq通道和mq的连接。
-func (r *RabbitMQ) destroy() {
+// Destroy 关闭mq通道和mq的连接。
+func (r *RabbitMQ) Destroy() {
 	r.conn.Close()
 }

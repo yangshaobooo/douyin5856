@@ -66,9 +66,12 @@ func DelUserFavoriteSet(userId, videoId int64) {
 // QueryFavoriteSet 根据用户id从redis中查找喜欢的视频列表
 func QueryFavoriteSet(userId int64) ([]int64, error) {
 	strings, err := rdbFavorite.SMembers(strconv.FormatInt(userId, 10)).Result()
-	res := make([]int64, len(strings))
-	for i, str := range strings {
-		res[i], _ = strconv.ParseInt(str, 10, 64)
+	res := make([]int64, 0)
+	for _, str := range strings {
+		if str != "-1" {
+			parseInt, _ := strconv.ParseInt(str, 10, 64)
+			res = append(res, parseInt)
+		}
 	}
 	return res, err
 }

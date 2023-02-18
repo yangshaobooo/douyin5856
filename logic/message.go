@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"log"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -111,12 +112,19 @@ func StuffOneFriend(friendInfo *models.FriendUser, fansId, curUserId int64) {
 
 // InterFollowFans 去交集得到朋友列表
 func InterFollowFans(fansIdList, followIdList []int64) []int64 {
+	// 还是要排序的对fansIdList
+	sort.Slice(fansIdList, func(i, j int) bool {
+		return fansIdList[i] < fansIdList[j]
+	})
+	sort.Slice(followIdList, func(i, j int) bool {
+		return followIdList[i] < followIdList[j]
+	})
 	friendIdList := make([]int64, 0)
 	var (
 		fansIndex   int
 		followIndex int
 	)
-	// 时间复杂度O（n）  因为查询出来的id本身就是有序的。
+	// 时间复杂度O（n）。
 	for fansIndex < len(fansIdList) && followIndex < len(followIdList) {
 		if fansIdList[fansIndex] == followIdList[followIndex] {
 			friendIdList = append(friendIdList, fansIdList[fansIndex])
