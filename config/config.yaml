@@ -13,18 +13,18 @@ log:
   max_backups: 7
 
 mysql:
-  host: "8.130.40.129"
+  host: "*"
   port: 3306
   user: "root"
-  password: "S21070078"
+  password: "*"
   dbname: "douyin"
   max_open_connections: 200
   max_idle_connections: 10
-  max_
+  max_attempts: 3
 redis:
-  host: "8.130.40.129"
+  host: "*"
   port: 6379
-  password: "S21070078"
+  password: "*"
   db: 0
   pool_size: 100
   expire_time_long: 86400000000000
