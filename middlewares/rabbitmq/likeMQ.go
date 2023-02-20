@@ -137,10 +137,17 @@ func (l *LikeMQ) consumerLikeAdd(messages <-chan amqp.Delivery) {
 					zap.L().Error("likeMq mysql.AlterFavorite failed,", zap.Error(err))
 				}
 				// 4、修改视频的点赞数量，+1
-				if err = mysql.AddFavoriteCount(videoId, 1); err != nil {
+				if err = mysql.AddVideoFavoriteCount(videoId, 1); err != nil {
 					flag = true
 					zap.L().Error("likeMq mysql.AddFavoriteCount failed,", zap.Error(err))
 				}
+				// 用户点赞视频数量的字段+1
+				mysql.AddUserFavoriteCount(userId, 1)
+				// 找到该视频的用户
+				videoUserId, _ := mysql.QueryUserIdByVideoId(videoId)
+				// 视频用户获赞总数+1
+				mysql.AddAllFavoriteCount(videoUserId, 1)
+
 				log.Println("点赞点赞")
 			} else {
 				// 该条数据没有存在过
@@ -151,10 +158,17 @@ func (l *LikeMQ) consumerLikeAdd(messages <-chan amqp.Delivery) {
 					zap.L().Error("likeMq mysql.InsertFavorite failed,", zap.Error(err))
 				}
 				// 6、 修改该视频点赞数量，+1
-				if err = mysql.AddFavoriteCount(videoId, 1); err != nil {
+				if err = mysql.AddVideoFavoriteCount(videoId, 1); err != nil {
 					flag = true
 					zap.L().Error("likeMq mysql.AddFavoriteCount failed,", zap.Error(err))
 				}
+				// 用户点赞视频数量的字段+1
+				mysql.AddUserFavoriteCount(userId, 1)
+				// 找到该视频的用户
+				videoUserId, _ := mysql.QueryUserIdByVideoId(videoId)
+				// 视频用户获赞总数+1
+				mysql.AddAllFavoriteCount(videoUserId, 1)
+
 				log.Println("点赞点赞")
 			}
 			// 7、一遍流程下来正常执行了，那就打断结束，不再尝试
@@ -191,10 +205,16 @@ func (l *LikeMQ) consumerLikeDel(messages <-chan amqp.Delivery) {
 					zap.L().Error("likeMq mysql.AlterFavorite failed,", zap.Error(err))
 				}
 				// 4、修改视频的点赞数量，-1
-				if err = mysql.AddFavoriteCount(videoId, -1); err != nil {
+				if err = mysql.AddVideoFavoriteCount(videoId, -1); err != nil {
 					flag = true
 					zap.L().Error("likeMq mysql.AddFavoriteCount failed,", zap.Error(err))
 				}
+				// 用户点赞视频数量的字段 -1
+				mysql.AddUserFavoriteCount(userId, -1)
+				// 找到该视频的用户
+				videoUserId, _ := mysql.QueryUserIdByVideoId(videoId)
+				// 视频用户获赞总数-1
+				mysql.AddAllFavoriteCount(videoUserId, -1)
 				log.Println("取消点赞")
 			} else {
 				// 该条数据没有存在过
@@ -204,11 +224,17 @@ func (l *LikeMQ) consumerLikeDel(messages <-chan amqp.Delivery) {
 					flag = true
 					zap.L().Error("likeMq mysql.InsertFavorite failed,", zap.Error(err))
 				}
-				// 6、 修改该视频点赞数量，+1
-				if err = mysql.AddFavoriteCount(videoId, -1); err != nil {
+				// 6、 修改该视频点赞数量，-1
+				if err = mysql.AddVideoFavoriteCount(videoId, -1); err != nil {
 					flag = true
 					zap.L().Error("likeMq mysql.AddFavoriteCount failed,", zap.Error(err))
 				}
+				// 用户点赞视频数量的字段+1
+				mysql.AddUserFavoriteCount(userId, -1)
+				// 找到该视频的用户
+				videoUserId, _ := mysql.QueryUserIdByVideoId(videoId)
+				// 视频用户获赞总数+1
+				mysql.AddAllFavoriteCount(videoUserId, -1)
 				log.Println("取消点赞")
 			}
 			// 7、一遍流程下来正常执行了，那就打断结束，不再尝试

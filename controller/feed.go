@@ -14,8 +14,8 @@ import (
 func Feed(c *gin.Context) {
 	//1、 获取请求参数
 	p := new(models.RequestFeed)
-	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldbindQuery来接收
-		// 请求参数有无
+	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldBindQuery来接收
+		// 请求参数有误
 		zap.L().Error("Feed with invalid param", zap.Error(err))
 		c.JSON(http.StatusOK, models.ResponseFeed{
 			Response: models.Response{StatusCode: 1, StatusMsg: "获取视频流失败"},
@@ -25,7 +25,7 @@ func Feed(c *gin.Context) {
 	zap.L().Info("传入的时间", zap.Int64("last_time", p.LatestTime))
 	var lastTime time.Time
 	if p.LatestTime != 0 {
-		lastTime = time.Unix(p.LatestTime/1000, 0) //这里除1000我是真没想到，离大普
+		lastTime = time.Unix(p.LatestTime/1000, 0) //这里转化一下时间格式
 	} else {
 		lastTime = time.Now()
 	}
@@ -42,6 +42,6 @@ func Feed(c *gin.Context) {
 		})
 		return
 	}
-	//fmt.Println(feed)
+	// 返回响应
 	c.JSON(http.StatusOK, feed)
 }

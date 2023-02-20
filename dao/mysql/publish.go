@@ -20,6 +20,17 @@ func Publish(video *models.VideosTable) error {
 	return nil
 }
 
+// PublishCountAdd 用户发布视频数量字段+1
+func PublishCountAdd(userId int64) error {
+	sqlStr := `update user_show set work_count=work_count+1 where user_id = ?`
+	_, err := db.Exec(sqlStr, userId)
+	if err != nil {
+		zap.L().Error("mysql/publish PublishCountAdd db.exec failed", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
 // PublishList 返回发布视频列表
 func PublishList(userId int64) ([]models.VideosTable, error) {
 	var videosTableList []models.VideosTable

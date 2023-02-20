@@ -13,15 +13,13 @@ import (
 func Register(c *gin.Context) {
 	// 1、------获取前端输入的username 和password------
 	p := new(models.RequestSignUp)               //使用预先定义好的结构体来接受数据
-	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldbindQuery来接收 千万别用shouldbindjson
+	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldBindQuery来接收 千万别用shouldbindjson
 		// 请求参数有无
 		zap.L().Error("SignUp with invalid param", zap.Error(err))
 		return
 	}
-	// 调试内容，记录以下是谁注册
-	//fmt.Println(p)
 
-	// 2、-----处理登录逻辑------
+	// 2、-----处理注册逻辑------
 	err, res := logic.SignUp(p)
 	if err != nil {
 		zap.L().Error("logic.SignUp failed", zap.Error(err))
@@ -39,7 +37,7 @@ func Login(c *gin.Context) {
 	// 1、------获取前端输入的username 和password------
 	p := new(models.RequestLogin)                //使用预先定义好的结构体来接受数据
 	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldBindQuery来接收
-		// 请求参数有无
+		// 请求参数有误
 		zap.L().Error("Login with invalid param", zap.Error(err))
 		return
 	}
@@ -62,7 +60,7 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	// 1、获取query 包括user_id 和token
 	p := new(models.RequestUserInfo)
-	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldbindjson来接收
+	if err := c.ShouldBindQuery(p); err != nil { // 使用shouldBindQuery来接收
 		// 请求参数有无
 		zap.L().Error("UserInfo with invalid param", zap.Error(err))
 		return

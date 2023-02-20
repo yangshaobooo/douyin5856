@@ -6,8 +6,10 @@ import (
 	"douyin5856/middlewares/snowflake1"
 	"douyin5856/models"
 	"fmt"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"log"
+	"strconv"
 	"sync"
 )
 
@@ -122,8 +124,13 @@ func GetUserByIdWithCurId(userId, curUserId int64) (models.User, error) {
 		FollowCount:   0,
 		FollowerCount: 0,
 		IsFollow:      false,
+		// 下面省略写，因为是可以省略的字段
 	}
 	user.UserID = userId
+	user.Avatar = viper.GetString("app.address") + strconv.Itoa(viper.GetInt("app.port")) + "/static/" + "touxiang2.jpeg"          // 头像暂时都用一样的
+	user.BackGroundImage = viper.GetString("app.address") + strconv.Itoa(viper.GetInt("app.port")) + "/static/" + "background.jpg" //背景图都用一样的
+	user.Signature = "十年饮冰，难凉热血。"
+	// 使用协程加快速度
 	var wg sync.WaitGroup
 	wg.Add(4)
 	// 查询用户名字
@@ -136,25 +143,38 @@ func GetUserByIdWithCurId(userId, curUserId int64) (models.User, error) {
 		wg.Done()
 	}()
 
-	// 查询用户的关注数量
-	go func() {
-		// 数据库中查询
-		followNum, err := mysql.QueryFollowCount(userId)
-		if err != nil {
-			zap.L().Error("logic/user GetUserByIdWithCurId QueryFollowCount failed", zap.Error(err))
-		}
-		user.FollowCount = followNum
-		wg.Done()
-	}()
+	//// 查询用户的关注数量
+	//go func() {
+	//	// 数据库中查询
+	//	followNum, err := mysql.QueryFollowCount(userId)
+	//	if err != nil {
+	//		zap.L().Error("logic/user GetUserByIdWithCurId QueryFollowCount failed", zap.Error(err))
+	//	}
+	//	user.FollowCount = followNum
+	//	wg.Done()
+	//}()
+	//
+	//// 查询用户的粉丝数量
+	//go func() {
+	//	// 数据库中查询
+	//	fansNum, err := mysql.QueryFansCount(userId)
+	//	if err != nil {
+	//		zap.L().Error("logic/user GetUserByIdWithCurId QueryFansCount failed", zap.Error(err))
+	//	}
+	//	user.FollowerCount = fansNum
+	//	wg.Done()
+	//}()
 
-	// 查询用户的粉丝数量
+	// 查询用户的关注、粉丝、获赞数量
 	go func() {
 		// 数据库中查询
-		fansNum, err := mysql.QueryFansCount(userId)
+		userInfo, err := mysql.QueryUserInfo(userId)
 		if err != nil {
-			zap.L().Error("logic/user GetUserByIdWithCurId QueryFansCount failed", zap.Error(err))
+			zap.L().Error("logic/user GetUserByIdWithCurId mysql.QueryUserInfo failed", zap.Error(err))
 		}
-		user.FollowerCount = fansNum
+		user.FollowCount = userInfo.FollowNum
+		user.FollowerCount = userInfo.FansNum
+		user.TotalFavorited = userInfo.Praise
 		wg.Done()
 	}()
 
@@ -169,6 +189,17 @@ func GetUserByIdWithCurId(userId, curUserId int64) (models.User, error) {
 			}
 			user.IsFollow = relation
 		}
+		wg.Done()
+	}()
+
+	// 查询发布作品数量和点赞视频的数量
+	go func() {
+		userShow, err := mysql.QueryPubFavCount(userId)
+		if err != nil {
+			zap.L().Error("logic/user GetUserByIdWithCurId mysql.QueryPubFavCount failed", zap.Error(err))
+		}
+		user.WorkCount = userShow.WorkCount
+		user.FavoriteCount = userShow.FavoriteCount
 		wg.Done()
 	}()
 	wg.Wait()

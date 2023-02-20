@@ -12,7 +12,7 @@ import (
 )
 
 func InitAllConfig() {
-	//1、加载配置  再setting中的Init
+	//1、加载配置  setting中的Init
 	if err := Init(); err != nil {
 		fmt.Printf("Init settings failed,err:%v\n", err)
 		return

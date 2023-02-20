@@ -11,6 +11,15 @@ type User struct {
 	FollowCount   int64  `json:"follow_count"`
 	FollowerCount int64  `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
+
+	// 额外新加的功能
+	Avatar          string `json:"avatar,omitempty"`           // 用户头像  todo
+	BackGroundImage string `json:"background_image,omitempty"` // 用户背景图像 todo
+	Signature       string `json:"signature,omitempty"`        // 用户介绍 todo
+
+	TotalFavorited int64 `json:"total_favorited,omitempty"` // 用户获得赞的数量
+	WorkCount      int64 `json:"work_count,omitempty"`
+	FavoriteCount  int64 `json:"favorite_count,omitempty"`
 }
 
 // ResponseSignUp 注册响应

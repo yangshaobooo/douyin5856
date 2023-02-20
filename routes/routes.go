@@ -30,12 +30,12 @@ func Setup() *gin.Engine {
 	apiRouter.GET("/comment/list/", jwt.AuthMiddleware(), controller.CommentList)
 
 	// extra apis - II
-	apiRouter.POST("/relation/action/", jwt.AuthMiddleware(), controller.RelationAction)
-	apiRouter.GET("/relation/follow/list/", jwt.AuthMiddleware(), controller.FollowList)
+	apiRouter.POST("/relation/action/", jwt.AuthMiddleware(), controller.RelationAction) // 关注操作
+	apiRouter.GET("/relation/follow/list/", jwt.AuthMiddleware(), controller.FollowList) // 关注列表
 	apiRouter.GET("/relation/follower/list/", jwt.AuthMiddleware(), controller.FansList)
 	apiRouter.GET("/relation/friend/list/", jwt.AuthMiddleware(), controller.FriendList)
-	apiRouter.GET("/message/chat/", jwt.AuthMiddleware(), controller.MessageChat)
-	apiRouter.POST("/message/action/", jwt.AuthMiddleware(), controller.MessageAction)
+	apiRouter.GET("/message/chat/", jwt.AuthMiddleware(), controller.MessageChat)      //消息记录
+	apiRouter.POST("/message/action/", jwt.AuthMiddleware(), controller.MessageAction) // 发送消息
 
 	return r
 }

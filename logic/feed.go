@@ -17,7 +17,6 @@ func Feed(latestTime time.Time, curUserId int64) (*models.ResponseFeed, error) {
 	// 1、根据时间取出规定数量的视频信息
 	res := new(models.ResponseFeed)
 	videosList, err := mysql.Feed(latestTime)
-	//fmt.Println(videosList)
 	if err != nil {
 		return res, err
 	}
@@ -27,7 +26,7 @@ func Feed(latestTime time.Time, curUserId int64) (*models.ResponseFeed, error) {
 	wgFeed.Add(len(videosList))
 	num := 0
 	for _, videoTable := range videosList {
-		var responseVideo models.Video
+		var responseVideo models.Video // 用来存储单条视频数据
 		go func(videoTable models.VideosTable) {
 			// 填充一条视频数据
 			StuffOneVideo(&responseVideo, &videoTable, curUserId)
@@ -89,7 +88,7 @@ func StuffOneVideo(responseVideo *models.Video, videoTable *models.VideosTable, 
 			if responseVideo.IsFavorite == true {
 				// 需要更新redis， == false的话不需要更新
 
-				// 数据库中查询除用户喜欢视频的id
+				// 数据库中查询用户喜欢视频的id
 				videosId, _ := mysql.QueryFavoriteVideos(curUserId)
 				// 同步到redis中
 				redis.UpdateFavoriteRdb(curUserId, videosId)

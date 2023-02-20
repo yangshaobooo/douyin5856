@@ -30,3 +30,15 @@ func Feed(latestTime time.Time) ([]models.VideosTable, error) {
 	}
 	return videos, nil
 }
+
+// QueryUserIdByVideoId 找到该视频的用户id
+func QueryUserIdByVideoId(videoId int64) (int64, error) {
+	sqlStr := `select author_id from videos where id = ?`
+	var userId int64
+	err := db.Get(&userId, sqlStr, videoId)
+	if err != nil {
+		zap.L().Error("mysql/feed QueryUserIdByVideoId failed", zap.Error(err))
+		return userId, err
+	}
+	return userId, nil
+}

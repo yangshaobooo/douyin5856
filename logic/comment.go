@@ -30,6 +30,7 @@ func CommentAction(p *models.RequestCommentAction, userId int64) (*models.Respon
 	cTime := time.Now()
 	// 1、雪花算法生成一个评论id
 	commentId := snowflake1.GenID()
+	// 存储评论
 	if err := mysql.CommentStore(commentId, p.VideoId, userId, p.CommentText, cTime); err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func CommentAction(p *models.RequestCommentAction, userId int64) (*models.Respon
 	if err = mysql.VideoCommentAdd(p.VideoId, 1); err != nil {
 		return nil, err
 	}
-	sTime := cTime.Format("01-02")
+	sTime := cTime.Format("01-02") // 设置时间格式
 	//4、组装需要返回的响应
 	res := &models.ResponseComment{
 		models.Response{
@@ -62,7 +63,7 @@ func CommentAction(p *models.RequestCommentAction, userId int64) (*models.Respon
 // CommentList 处理评论列表函数
 func CommentList(videoId, curUserId int64) (*models.ResponseCommentList, error) {
 	log.Println("logic/comment/CommentList :running")
-	//1、分局videoId 去comments里面查找所有的评论
+	//1、根据videoId 去comments里面查找所有的评论
 	comments, err := mysql.QueryComments(videoId)
 	if err != nil {
 		return nil, err
@@ -76,6 +77,7 @@ func CommentList(videoId, curUserId int64) (*models.ResponseCommentList, error) 
 	for _, commentTable := range comments {
 		var commentData models.Comment
 		go func(commentTable models.CommentsTable) {
+			// 填充一条评论数据
 			StuffOneComment(&commentData, &commentTable, curUserId)
 			resComment[num] = commentData
 			num = num + 1
@@ -102,7 +104,7 @@ func StuffOneComment(comment *models.Comment, commentTable *models.CommentsTable
 	// 评论表中自带的数据直接赋值
 	comment.Id = commentTable.Id
 	comment.Content = commentTable.CommentText
-	comment.CreateDate = commentTable.CreateTime.Format("01-02")
+	comment.CreateDate = commentTable.CreateTime.Format("01-02") // 设置时间显示格式
 	// 填充一条评论缺少的是User的相关数据，查询返回
 	var err error
 	comment.User, err = GetUserByIdWithCurId(commentTable.UserId, curUserId)

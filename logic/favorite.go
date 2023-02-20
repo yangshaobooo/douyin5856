@@ -25,12 +25,12 @@ func FavoriteAction(videoId, userId int64, actionType int32) (err error) {
 	if actionType == 1 {
 		// 增加用户的redis喜欢集合
 		redis.AddUserFavoriteSet(userId, videoId)
-		// 通过消息队列操作数据库，添加mysql中用户喜欢的视频
+		// 通过消息队列操作数据库，处理点赞相关数据库操作
 		rabbitmq.RmqLikeAdd.Publish(sb.String())
 	} else {
 		// 把视频从用户redis喜欢集合里面删除
 		redis.DelUserFavoriteSet(userId, videoId)
-		// 通过消息队列操作数据库，添加mysql中用户不喜欢的视频
+		// 通过消息队列操作数据库，处理取消点赞相关数据库操作
 		rabbitmq.RmqLikeDel.Publish(sb.String())
 	}
 	return nil
@@ -39,13 +39,14 @@ func FavoriteAction(videoId, userId int64, actionType int32) (err error) {
 // FavoriteList 处理点赞列表相关逻辑
 func FavoriteList(userId, curUserId int64) (*models.ResponseFavoriteList, error) {
 	log.Println("FavoriteList : running")
-	// 1、更具userid从redis中读取喜欢的视频
+	// 1、根据userid从redis中读取喜欢的视频
 	videoIdList, err := redis.QueryFavoriteSet(userId)
 	if err != nil {
 		return nil, err
 	}
 	if len(videoIdList) == 0 {
-		// 1、根据userId从user_favorite_video表中找到点赞的视频id
+		// redis没有查到，从数据库中查询
+		// 根据userId从user_favorite_video表中找到点赞的视频id
 		videoIdList, err = mysql.QueryFavoriteVideos(userId)
 		if err != nil {
 			return nil, err

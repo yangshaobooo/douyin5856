@@ -35,10 +35,13 @@ func MessageChat(c *gin.Context) {
 	// 1、 接受请求参数
 	curUserId := c.GetInt64("userID")
 	toUserIdString, _ := c.GetQuery("to_user_id")
+	preMsgTimeString, _ := c.GetQuery("pre_msg_time")
+
 	toUserId, _ := strconv.ParseInt(toUserIdString, 10, 64)
+	preMsgTime, _ := strconv.ParseInt(preMsgTimeString, 10, 64)
 
 	// 2、消息记录的逻辑处理
-	responseChatRecord, err := logic.MessageChat(curUserId, toUserId)
+	responseChatRecord, err := logic.MessageChat(curUserId, toUserId, preMsgTime)
 	if err != nil {
 		return
 	}

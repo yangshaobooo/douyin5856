@@ -21,7 +21,7 @@ func RelationAction(p *models.RequestRelation, curUserId int64) (err error) {
 			return err
 		}
 	} else {
-		// 需要向表中插入一段新的关系，必然是关注的操作
+		// 没有过关系，需要向表中插入一段新的关系，必然是关注的操作
 		if err = mysql.InsertRelation(curUserId, p.ToUserId, true); err != nil {
 			return err
 		}
@@ -112,6 +112,7 @@ func FansList(userId int64) (*models.ResponseUserList, error) {
 	}
 	wgFansList.Wait()
 	// 不需要排序了，随便顺序
+
 	// 3、组合最后的数据
 	responseUserList := &models.ResponseUserList{
 		models.Response{

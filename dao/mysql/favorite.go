@@ -56,8 +56,8 @@ func InsertFavorite(userId, videoId int64, isFavorite bool) (err error) {
 	return nil
 }
 
-// AddFavoriteCount 视频中的点赞数+1
-func AddFavoriteCount(videoId, num int64) (err error) {
+// AddVideoFavoriteCount 视频中的点赞数+1
+func AddVideoFavoriteCount(videoId, num int64) (err error) {
 	sqlStr := `update videos
 	set favorite_count=favorite_count+? 
 	where id=?`
@@ -104,4 +104,26 @@ func QueryVideos(videoIdList []int64) ([]models.VideosTable, error) {
 		return videoTableList, err
 	}
 	return videoTableList, nil
+}
+
+// AddUserFavoriteCount 用户点赞视频数量字段+1
+func AddUserFavoriteCount(userId, num int64) error {
+	sqlStr := `update user_show set favorite_count=favorite_count+? where user_id=?`
+	_, err := db.Exec(sqlStr, num, userId)
+	if err != nil {
+		zap.L().Error("mysql/favorite AddUserFavoriteCount failed", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// AddAllFavoriteCount 视频用户获赞总数+1
+func AddAllFavoriteCount(videoUserId, num int64) error {
+	sqlStr := `update user_info set praise_num=praise_num+? where user_id=?`
+	_, err := db.Exec(sqlStr, num, videoUserId)
+	if err != nil {
+		zap.L().Error("mysql/favorite AddAllFavoriteCount failed", zap.Error(err))
+		return err
+	}
+	return nil
 }

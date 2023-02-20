@@ -7,6 +7,7 @@ import (
 	"douyin5856/models"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"log"
 	"mime/multipart"
@@ -26,6 +27,7 @@ func Publish(c *gin.Context, userId int64, title string, data *multipart.FileHea
 	log.Println("Publish : running")
 	// 1、给视频生成唯一ID
 	videoID := snowflake1.GenID()
+	// 开启协程加快速度
 	wgPublish := &sync.WaitGroup{}
 	wgPublish.Add(2)
 
@@ -49,10 +51,10 @@ func Publish(c *gin.Context, userId int64, title string, data *multipart.FileHea
 	}()
 	wgPublish.Wait()
 	// 4、把视频相关数据存到mysql:视频id 用户id 播放地址 cover地址 发布时间 （点赞数 评论数默认0）title
-	playUrl := "http://192.168.0.112:8080/static/" + strconv.FormatInt(videoID, 10) + ".mp4"
-	coverUrl := "http://192.168.0.112:8080/static/" + strconv.FormatInt(videoID, 10) + ".jpg"
-	fmt.Println(playUrl)
-	fmt.Println(coverUrl)
+	playUrl := viper.GetString("app.address") + strconv.Itoa(viper.GetInt("app.port")) + "/static/" + strconv.FormatInt(videoID, 10) + ".mp4"
+	coverUrl := viper.GetString("app.address") + strconv.Itoa(viper.GetInt("app.port")) + "/static/" + strconv.FormatInt(videoID, 10) + ".jpg"
+	fmt.Printf("上传视频的地址是：%v\n", playUrl)
+	fmt.Printf("上传视频的封面地址是：%v\n", coverUrl)
 	video := &models.VideosTable{
 		VideoID:       videoID,
 		AuthorID:      userId,
@@ -64,6 +66,8 @@ func Publish(c *gin.Context, userId int64, title string, data *multipart.FileHea
 		Title:         title,
 	}
 	err = mysql.Publish(video)
+	// 发布视频之后，用户发布视频数量+1
+	err = mysql.PublishCountAdd(userId)
 	return
 }
 
@@ -81,7 +85,7 @@ func PublishList(userId, curId int64) (*models.ResponsePublishList, error) {
 	wgPublishList.Add(len(videosTables))
 	num := 0
 	for _, videosTable := range videosTables {
-		var responseVideo models.Video
+		var responseVideo models.Video // 存储一条视频数据
 		go func(videoTable models.VideosTable) {
 			// 填充一条视频数据
 			StuffOneVideo(&responseVideo, &videoTable, curId)

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Init 加载配置文件
 func Init() (err error) {
 	//方式一：直接指定配置文件路径，相对路径，绝对路径都行
 	//当本地有多个不同格式的config文件时，比如config.json config.yaml

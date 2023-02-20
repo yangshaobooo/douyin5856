@@ -11,6 +11,7 @@ import (
 //声明一个全局的sqlx数据库
 var db *sqlx.DB
 
+// Init 初始化数据库的连接
 func Init() (err error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
 		viper.GetString("mysql.user"),
