@@ -8,6 +8,9 @@ import (
 
 //声明一个全局的rdb变量
 var rdbFavorite *redis.Client
+var rdbComment *redis.Client
+var rdbFollowing *redis.Client
+var rdbFans *redis.Client
 
 // Init 初始化连接
 func Init() (err error) {
@@ -19,6 +22,33 @@ func Init() (err error) {
 		),
 		Password: viper.GetString("redis.password"), //redis密码
 		DB:       0,                                 //使用哪个数据库，0-15，选一个
+		PoolSize: viper.GetInt("redis.pool_size"),   //连接池大小
+	})
+	rdbComment = redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%d", //服务器ip地址和端口号
+			viper.GetString("redis.host"),
+			viper.GetInt("redis.port"),
+		),
+		Password: viper.GetString("redis.password"), //redis密码
+		DB:       1,                                 //使用哪个数据库，0-15，选一个
+		PoolSize: viper.GetInt("redis.pool_size"),   //连接池大小
+	})
+	rdbFollowing = redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%d", //服务器ip地址和端口号
+			viper.GetString("redis.host"),
+			viper.GetInt("redis.port"),
+		),
+		Password: viper.GetString("redis.password"), //redis密码
+		DB:       2,                                 //使用哪个数据库，0-15，选一个
+		PoolSize: viper.GetInt("redis.pool_size"),   //连接池大小
+	})
+	rdbFans = redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%d", //服务器ip地址和端口号
+			viper.GetString("redis.host"),
+			viper.GetInt("redis.port"),
+		),
+		Password: viper.GetString("redis.password"), //redis密码
+		DB:       3,                                 //使用哪个数据库，0-15，选一个
 		PoolSize: viper.GetInt("redis.pool_size"),   //连接池大小
 	})
 	return

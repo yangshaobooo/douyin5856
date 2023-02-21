@@ -2,18 +2,26 @@ package logic
 
 import (
 	"douyin5856/dao/mysql"
+	"douyin5856/dao/redis"
 	"douyin5856/middlewares/snowflake1"
 	"douyin5856/models"
-	"go.uber.org/zap"
 	"log"
 	"sort"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // CommentAction 处理评论相关逻辑
 func CommentAction(p *models.RequestCommentAction, userId int64) (*models.ResponseComment, error) {
 	if p.ActionType == 2 {
+		//从redis中删除评论数据
+		err2 := redis.DelCommentById(p.VideoId, p.CommentId)
+		if err2!=nil{
+			log.Println(err2.Error())
+		}
+
 		//删除评论
 		// 从数据库中删除该条评论数据
 		if err := mysql.CommentDelete(p.CommentId); err != nil {
@@ -30,6 +38,15 @@ func CommentAction(p *models.RequestCommentAction, userId int64) (*models.Respon
 	cTime := time.Now()
 	// 1、雪花算法生成一个评论id
 	commentId := snowflake1.GenID()
+	//先将video comment id映射存入redis
+	err2 := redis.AddCommentById(p.VideoId, commentId)
+	if err2!=nil{
+		log.Println(err2)
+	}
+
+
+
+
 	// 存储评论
 	if err := mysql.CommentStore(commentId, p.VideoId, userId, p.CommentText, cTime); err != nil {
 		return nil, err

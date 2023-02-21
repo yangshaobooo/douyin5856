@@ -2,45 +2,74 @@ package logic
 
 import (
 	"douyin5856/dao/mysql"
+	"douyin5856/dao/redis"
 	"douyin5856/models"
-	"go.uber.org/zap"
 	"log"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 // RelationAction 处理用户的关注和取消关注
 func RelationAction(p *models.RequestRelation, curUserId int64) (err error) {
 	// 1、首先查询关系表里面有没有
-	have, err := mysql.HaveRelation(curUserId, p.ToUserId)
+	
+	//直接查询redis
+	have, err := redis.IsFans(curUserId, p.ToUserId)
+	
+	// have, err := mysql.HaveRelation(curUserId, p.ToUserId)
 	if err != nil {
 		return
 	}
 	if have {
 		//曾经有过关系，直接修改最后的is_follow就可以了
+	
 		if err = mysql.AlterRelation(curUserId, p.ToUserId); err != nil {
 			return err
 		}
 	} else {
 		// 没有过关系，需要向表中插入一段新的关系，必然是关注的操作
+		
+
 		if err = mysql.InsertRelation(curUserId, p.ToUserId, true); err != nil {
 			return err
 		}
 	}
 	if p.ActionType == 1 {
 		// 当前用户的关注数量+1
+		//首先修改redis
+		err2 := redis.BeFans(curUserId, p.ToUserId)
+		if err2!=nil{
+			log.Println(err2.Error())
+		}
 		if err = mysql.FollowNumChange(curUserId, 1); err != nil {
 			return err
 		}
 		// 目标用户的粉丝数量+1
+		//修改redis
+		err3 := redis.AddFollower(p.ToUserId, curUserId)
+		if err3!=nil{
+			log.Println(err3.Error())
+		}
 		if err = mysql.FansNumChange(p.ToUserId, 1); err != nil {
 			return err
 		}
 	} else {
 		// 当前用户的关注数量-1
+		//修改redis
+		err2 := redis.NoFans(curUserId, p.ToUserId)
+		if err2!=nil{
+			log.Println(err2.Error())
+		}
 		if err = mysql.FollowNumChange(curUserId, -1); err != nil {
 			return err
 		}
 		// 目标用户的粉丝数量-1
+		//修改redis
+		err3 := redis.CancelFollow(p.ToUserId, curUserId)
+		if err3!=nil{
+			log.Println(err3.Error())
+		}
 		if err = mysql.FansNumChange(p.ToUserId, -1); err != nil {
 			return err
 		}
@@ -52,7 +81,9 @@ func RelationAction(p *models.RequestRelation, curUserId int64) (err error) {
 func FollowList(userId int64) (*models.ResponseUserList, error) {
 	log.Println("FollowList : running")
 	// 1、根据用户id查询 user_follow表，找到所有的关注用户
-	followIdList, err := mysql.QueryFollowID(userId)
+	//使用redis提升速度
+	followIdList, err := redis.GetFollowingList(userId)
+	// followIdList, err := mysql.QueryFollowID(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +121,9 @@ func FollowList(userId int64) (*models.ResponseUserList, error) {
 func FansList(userId int64) (*models.ResponseUserList, error) {
 	log.Println("FansList : running")
 	// 1、根据用户id查询 user_follow表，找到所有的粉丝用户
-	fansIdList, err := mysql.QueryFansID(userId)
+	//使用redis提升速度
+	fansIdList, err := redis.GetFansList(userId)
+	// fansIdList, err := mysql.QueryFansID(userId)
 	if err != nil {
 		return nil, err
 	}
