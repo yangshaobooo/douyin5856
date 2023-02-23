@@ -70,7 +70,7 @@ func Login(p *models.RequestLogin) (error, *models.ResponseLogin) {
 	res := &models.ResponseLogin{
 		models.Response{
 			-1,
-			"",
+			"账号密码错误",
 		},
 		0,
 		"",
@@ -99,6 +99,9 @@ func Login(p *models.RequestLogin) (error, *models.ResponseLogin) {
 // UserInfo 查看用户信息逻辑处理
 func UserInfo(p *models.RequestUserInfo, curUserId int64) (error, *models.ResponseUserInfo) {
 	log.Println("userInfo :running")
+	if p.UserID == 0 {
+		p.UserID = curUserId
+	}
 	user, err := GetUserByIdWithCurId(p.UserID, curUserId)
 	if err != nil {
 		return err, nil

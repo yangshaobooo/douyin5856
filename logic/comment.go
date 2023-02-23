@@ -23,7 +23,17 @@ func CommentAction(p *models.RequestCommentAction, userId int64) (*models.Respon
 		if err := mysql.VideoCommentAdd(p.VideoId, -1); err != nil {
 			return nil, err
 		}
-		return nil, nil
+		commentFail := &models.ResponseComment{
+			models.Response{
+				0,
+				"删除评论",
+			},
+			models.Comment{
+				Id:      p.CommentId,
+				Content: p.CommentText,
+			},
+		}
+		return commentFail, nil
 	}
 
 	// 发布评论
